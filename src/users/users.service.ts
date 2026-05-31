@@ -1,8 +1,9 @@
-import { BadRequestException, HttpCode, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserDto } from './dto/user.dto';
+import { UserDropdownDto } from './dto/user-dropdown.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -20,6 +21,12 @@ export class UsersService {
     createUserDto.password = await this.passwordService.hashPassword(createUserDto.password);
 
     return this.userRepository.save(createUserDto);
+  }
+
+  async dropdown() {
+    const users = await this.userRepository.find();
+
+    return plainToInstance(UserDropdownDto, users, { excludeExtraneousValues: true });
   }
 
   async findAll() {
