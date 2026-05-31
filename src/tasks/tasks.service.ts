@@ -1,48 +1,64 @@
-import { Injectable, Res, Response } from '@nestjs/common';
-import { Task } from './interfaces/task.interface'
-import { CreateTaskDTO } from './dto/create-task.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Task } from './entities/task.entity';
+import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { TaskDropdownDto } from './dto/task-dropdown.dto';
+import { TaskDto } from './dto/task.dto';
 
 @Injectable()
 export class TasksService {
-    private tasks: Task[] = [
-        {
-            id: 1,
-            name: 'Weed Eating'
-        },
-        {
-            id: 2,
-            name: 'Mowing'
-        },
-        {
-            id: 3,
-            name: 'Dih Eating 🥀'
-        },
-    ]
+  constructor(
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>
+  ) {}
 
-    getTasks(): Task[] {
-        return this.tasks;
+  findAll() {
+    const tasks = this.taskRepository.find();
+
+    return plainToInstance(TaskDto, tasks, { excludeExtraneousValues: true });
+  }
+  
+  dropdown() {
+    const tasks = this.taskRepository.find();
+
+    return plainToInstance(TaskDropdownDto, tasks, { excludeExtraneousValues: true });
+  }
+
+  async findOne(id: number) {
+    const task = await this.taskRepository.findOneBy({ id });
+
+    if (!task) {
+      throw new NotFoundException(`Task #${id} not found`);
     }
 
-    findTask(id: number): Task|undefined {
-        return this.tasks.find(task => task.id === id);
-    }
+    return task;
+  }
 
-    create(createTaskDTO: CreateTaskDTO) {
-        var latestTask = this.tasks.at(-1)!;
-        var id = latestTask.id + 1;
+  async create(createTaskDto: CreateTaskDto) {
+    const task = await this.taskRepository.save(createTaskDto);
 
-        var task : Task = {
-            id: id,
-            name: createTaskDTO.name,
-            description: createTaskDTO.description
-        }
+    return plainToInstance(TaskDto, task, { excludeExtraneousValues: true });
+  }
 
-        this.tasks.push(task);
+  async remove(id: number) {
+    await this.findOne(id);
 
-        return task;
-    }
+    await this.taskRepository.softDelete(id);
+  }
 
-    delete(task: Task) {
-        this.tasks = this.tasks.filter(value => value.id !== task.id)
-    }
+  // for tasks we can reuser the createDTO, it's the same
+  async update(id: number, updateTaskDto: CreateTaskDto) {
+    const task = await this.findOne(id);
+    const updated = await this.taskRepository.save(Object.assign(task, updateTaskDto));
+
+    return plainToInstance(TaskDto, updated, { excludeExtraneousValues: true });
+  }
+
+  async restore(id: number) {
+    await this.taskRepository.restore(id);
+
+    return plainToInstance(TaskDto, await this.findOne(id), { excludeExtraneousValues: true });
+  }
 }
