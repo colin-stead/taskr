@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, DeleteDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, DeleteDateColumn, UpdateDateColumn, AfterLoad } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 @Entity('users')
@@ -21,6 +21,13 @@ export class User {
 
     @Column()
     role_id!: number;
+
+    name!: string;
+
+    @AfterLoad()
+    computeName() {
+        this.name = `${this.first_name} ${this.last_name}`;
+    }
 
     @CreateDateColumn()
     created_at!: Date;
