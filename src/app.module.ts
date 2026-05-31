@@ -8,6 +8,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { Task } from './tasks/entities/task.entity';
+import { DropdownsModule } from './dropdowns/dropdowns.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { Task } from './tasks/entities/task.entity';
       inject: [ConfigService],
     }),
     UsersModule,
+    DropdownsModule,
   ],
   controllers: [AppController],
   providers: [
